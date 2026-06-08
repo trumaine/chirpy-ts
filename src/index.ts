@@ -18,11 +18,19 @@ app.use(express.json());
 
 app.use("/app", middlewareMetricsInc, express.static("./src/app"));
 
-app.get("/api/healthz", handlerReadiness);
-app.get("/admin/metrics", handlerMetrics);
-app.post("/admin/reset", handlerReset);
+app.get("/api/healthz", (req, res, next) => {
+    Promise.resolve(handlerReadiness(req, res)).catch(next);
+});
+app.get("/admin/metrics", (req, res, next) => {
+    Promise.resolve(handlerMetrics(req, res)).catch(next);
+});
+app.post("/admin/reset", (req, res, next) => {
+    Promise.resolve(handlerReset(req, res)).catch(next);
+});
 
-app.post("/api/validate_chirp", handlerChirpsValidate);
+app.post("/api/validate_chirp", (req, res, next) => {
+    Promise.resolve(handlerChirpsValidate(req, res)).catch(next);
+});
 
 app.use(errorMiddleware);
 
