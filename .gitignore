@@ -1,4 +1,5 @@
+*.http
 node_modules/
 dist/
-*.http
 server.log
+.env
