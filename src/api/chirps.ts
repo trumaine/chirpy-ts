@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 
 import { respondWithJSON } from "./json.js";
-import { createChirp } from "../db/queries/chirps.js";
-import { BadRequestError, UserNotAuthenticatedError } from "./errors.js";
+import { createChirp, getChirps } from "../db/queries/chirps.js";
+import { BadRequestError, NotFoundError, UserNotAuthenticatedError } from "./errors.js";
 import { getUserById } from "../db/queries/users.js";
 
 export async function handlerChirpsCreate(req: Request, res: Response) {
@@ -58,4 +58,9 @@ function getCleanedBody(body: string, badWords: string[]) {
 
   const cleaned = words.join(" ");
   return cleaned;
+}
+
+export async function handlerChirpsRetrieve(req: Request, res: Response) {
+    const chirps = await getChirps();
+    respondWithJSON(res, 200, chirps);
 }
