@@ -7,7 +7,8 @@ type Config = {
 
 type APIConfig = {
     fileserverHits: number;
-    port: number
+    port: number;
+    platform: string;
 }
 
 type DBConfig = {
@@ -32,7 +33,8 @@ const migrationConfig: MigrationConfig = {
 export const config: Config = {
     api: {
         fileserverHits: 0,
-        port: Number(envOrThrow("PORT"))
+        port: Number(envOrThrow("PORT")),
+        platform: envOrThrow("PLATFORM"),
     },
     db: {
         url: envOrThrow("DB_URL"),
