@@ -11,5 +11,3 @@ export const users = pgTable("users", {
 });
 
 export type NewUser = typeof users.$inferInsert;
-
-//postgres://trumaine:@localhost:5432/chirpy_ts
