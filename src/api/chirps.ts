@@ -1,36 +1,61 @@
 import { Request, Response } from "express";
 
 import { respondWithJSON } from "./json.js";
-import { BadRequestError } from "./errors.js";
+import { createChirp } from "../db/queries/chirps.js";
+import { BadRequestError, UserNotAuthenticatedError } from "./errors.js";
+import { getUserById } from "../db/queries/users.js";
 
-export async function handlerChirpsValidate(req: Request, res: Response) {
+export async function handlerChirpsCreate(req: Request, res: Response) {
     type parameters = {
         body: string;
+        userId: string;
     };
 
     const params: parameters = req.body;
-
-    const maxChirpLength = 140;
-    if (params.body.length > maxChirpLength) {
-        throw new BadRequestError(
-            `Chirp is too long. Max length is ${maxChirpLength}`,
-        );
-    }
-
-    const words = params.body.split(" ");
-    const badWords = ["kerfuffle","sharbert","fornax"];
-
-    for (let i = 0; i < words.length; i++) {
-        const word = words[i];
-        const loweredWord = word.toLowerCase()
-        if (badWords.includes(loweredWord)) {
-            words[i] = "****";
-        }
-    }
     
-    const cleaned = words.join(" ");
+    const cleaned = validateChirp(params.body);
 
-    respondWithJSON(res, 200, { 
-        cleanedBody: cleaned,
+    const user = await getUserById(params.userId);
+
+    if (!user) {
+        throw new UserNotAuthenticatedError("Not a valid user id");
+    }
+
+    const chirp = await createChirp({
+        body: cleaned,
+        userId: user.id,
     });
+
+    if (!chirp) {
+        throw new Error("Could not create chirp");
+    }
+
+    respondWithJSON(res, 201, chirp);
+}
+
+function validateChirp(body: string) {
+  const maxChirpLength = 140;
+  if (body.length > maxChirpLength) {
+    throw new BadRequestError(
+      `Chirp is too long. Max length is ${maxChirpLength}`,
+    );
+  }
+
+  const badWords = ["kerfuffle", "sharbert", "fornax"];
+  return getCleanedBody(body, badWords);
+}
+
+function getCleanedBody(body: string, badWords: string[]) {
+  const words = body.split(" ");
+
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const loweredWord = word.toLowerCase();
+    if (badWords.includes(loweredWord)) {
+      words[i] = "****";
+    }
+  }
+
+  const cleaned = words.join(" ");
+  return cleaned;
 }
