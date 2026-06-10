@@ -1,36 +1,36 @@
 import { Request, Response } from "express";
 
 import { respondWithJSON } from "./json.js";
-import { createChirp, getChirps } from "../db/queries/chirps.js";
+import { createChirp, getChirpById, getChirps } from "../db/queries/chirps.js";
 import { BadRequestError, NotFoundError, UserNotAuthenticatedError } from "./errors.js";
 import { getUserById } from "../db/queries/users.js";
 
 export async function handlerChirpsCreate(req: Request, res: Response) {
-    type parameters = {
-        body: string;
-        userId: string;
-    };
+  type parameters = {
+    body: string;
+    userId: string;
+  };
 
-    const params: parameters = req.body;
-    
-    const cleaned = validateChirp(params.body);
+  const params: parameters = req.body;
 
-    const user = await getUserById(params.userId);
+  const cleaned = validateChirp(params.body);
 
-    if (!user) {
-        throw new UserNotAuthenticatedError("Not a valid user id");
-    }
+  const user = await getUserById(params.userId);
 
-    const chirp = await createChirp({
-        body: cleaned,
-        userId: user.id,
-    });
+  if (!user) {
+    throw new UserNotAuthenticatedError("Not a valid user id");
+  }
 
-    if (!chirp) {
-        throw new Error("Could not create chirp");
-    }
+  const chirp = await createChirp({
+    body: cleaned,
+    userId: user.id,
+  });
 
-    respondWithJSON(res, 201, chirp);
+  if (!chirp) {
+    throw new Error("Could not create chirp");
+  }
+
+  respondWithJSON(res, 201, chirp);
 }
 
 function validateChirp(body: string) {
@@ -61,6 +61,20 @@ function getCleanedBody(body: string, badWords: string[]) {
 }
 
 export async function handlerChirpsRetrieve(req: Request, res: Response) {
-    const chirps = await getChirps();
-    respondWithJSON(res, 200, chirps);
+  const chirps = await getChirps();
+  respondWithJSON(res, 200, chirps);
+}
+
+export async function handlerChirpsGet(req: Request, res: Response) {
+  const { chirpId } = req.params;
+
+  if (typeof chirpId !== "string") {
+    throw new BadRequestError("Invalid chirp ID");
+  }
+
+  const chirp = await getChirpById(chirpId);
+  if (!chirp) {
+    throw new NotFoundError(`Chirp with chirpId: ${chirpId} not found`);
+  }
+  respondWithJSON(res, 200, chirp);
 }
