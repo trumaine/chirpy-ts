@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import { respondWithJSON } from "./json.js";
-import { createChirp, getChirpById, getChirps } from "../db/queries/chirps.js";
+import { createChirp, deleteChirpById, getChirpById, getChirps } from "../db/queries/chirps.js";
 import { BadRequestError, NotFoundError, UserForbiddenError, UserNotAuthenticatedError } from "./errors.js";
 import { getUserById } from "../db/queries/users.js";
 import { getBearerToken, validateJWT } from "../auth.js";
@@ -23,7 +23,7 @@ export async function handlerChirpsCreate(req: Request, res: Response) {
   if (!userId) {
     throw new UserNotAuthenticatedError("Invalid token");
   }
-  
+
   const cleaned = validateChirp(params.body);
   const chirp = await createChirp({
     body: cleaned,
@@ -81,4 +81,31 @@ export async function handlerChirpsGet(req: Request, res: Response) {
     throw new NotFoundError(`Chirp with chirpId: ${chirpId} not found`);
   }
   respondWithJSON(res, 200, chirp);
+}
+
+export async function handlerChirpsDelete(req: Request, res: Response) {
+  const token = getBearerToken(req);
+  const userId = validateJWT(token, config.jwt.secret);
+  if (!userId) {
+    throw new UserForbiddenError("Not authorized");
+  }
+
+  const { chirpId } = req.params;
+
+  if (typeof chirpId !== "string") {
+    throw new BadRequestError("Invalid chirp ID");
+  }
+
+  const chirp = await getChirpById(chirpId);
+  
+  if (!chirp) {
+    throw new NotFoundError(`Chirp with chirpId: ${chirpId} not found`);
+  }
+
+  if (chirp.userId !== userId) {
+    throw new UserForbiddenError("User is not author of chrip");
+  }
+  
+  await deleteChirpById(chirpId);
+  res.status(204).send();
 }

@@ -14,7 +14,7 @@ import { config } from "../config.js";
 import {
     revokeRefreshToken,
     saveRefreshToken,
-    userForRefreshToken,
+    userForRefreshToken
 } from "../db/queries/refresh.js";
 
 type LoginResponse = UserResponse & {
