@@ -2,28 +2,32 @@ import { Request, Response } from "express";
 
 import { respondWithJSON } from "./json.js";
 import { createChirp, getChirpById, getChirps } from "../db/queries/chirps.js";
-import { BadRequestError, NotFoundError, UserNotAuthenticatedError } from "./errors.js";
+import { BadRequestError, NotFoundError, UserForbiddenError, UserNotAuthenticatedError } from "./errors.js";
 import { getUserById } from "../db/queries/users.js";
+import { getBearerToken, validateJWT } from "../auth.js";
+import { config } from "../config.js";
 
 export async function handlerChirpsCreate(req: Request, res: Response) {
   type parameters = {
     body: string;
-    userId: string;
   };
 
   const params: parameters = req.body;
 
-  const cleaned = validateChirp(params.body);
-
-  const user = await getUserById(params.userId);
-
-  if (!user) {
-    throw new UserNotAuthenticatedError("Not a valid user id");
+  const token = getBearerToken(req);
+  if (!token) {
+    throw new UserForbiddenError("Authorization token is required");
   }
 
+  const userId = validateJWT(token, config.jwt.secret);
+  if (!userId) {
+    throw new UserNotAuthenticatedError("Invalid token");
+  }
+  
+  const cleaned = validateChirp(params.body);
   const chirp = await createChirp({
     body: cleaned,
-    userId: user.id,
+    userId: userId,
   });
 
   if (!chirp) {
