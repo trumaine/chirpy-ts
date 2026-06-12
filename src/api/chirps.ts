@@ -3,7 +3,6 @@ import { Request, Response } from "express";
 import { respondWithJSON } from "./json.js";
 import { createChirp, deleteChirpById, getChirpById, getChirps } from "../db/queries/chirps.js";
 import { BadRequestError, NotFoundError, UserForbiddenError, UserNotAuthenticatedError } from "./errors.js";
-import { getUserById } from "../db/queries/users.js";
 import { getBearerToken, validateJWT } from "../auth.js";
 import { config } from "../config.js";
 
@@ -65,7 +64,14 @@ function getCleanedBody(body: string, badWords: string[]) {
 }
 
 export async function handlerChirpsRetrieve(req: Request, res: Response) {
-  const chirps = await getChirps();
+  let authorId = "";
+  let authorIdQuery = req.query.authorId;
+  if (typeof authorIdQuery === "string") {
+    authorId = authorIdQuery;
+  }
+
+  const chirps = await getChirps(authorId);
+
   respondWithJSON(res, 200, chirps);
 }
 
