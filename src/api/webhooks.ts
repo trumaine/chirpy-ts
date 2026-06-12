@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { upgradeUserToChirpyRed } from "../db/queries/users.js";
-import { NotFoundError } from "./errors.js";
+import { getAPIKey } from "../auth.js";
+import { config } from "../config.js";
+import { UserNotAuthenticatedError } from "./errors.js";
 
 export async function handlerWebhook(req: Request, res: Response) {
     type parameters = {
@@ -9,6 +11,12 @@ export async function handlerWebhook(req: Request, res: Response) {
             userId: string;
         };
     };
+
+    const apiKey = getAPIKey(req);
+    if (apiKey !== config.api.polkaKey) {
+        throw new UserNotAuthenticatedError("invalid api key");
+    }
+
     const params: parameters = req.body;
 
     if (params.event !== "user.upgraded") {
