@@ -36,6 +36,20 @@
       "when": 1781181893334,
       "tag": "0004_fancy_ghost_rider",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781264724385,
+      "tag": "0005_perpetual_sabra",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781265046517,
+      "tag": "0006_busy_shadowcat",
+      "breakpoints": true
     }
   ]
 }
